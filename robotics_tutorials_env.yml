@@ -1,4 +1,4 @@
-name: robotics_course
+name: robotics_tutorials
 channels:
   - conda-forge
   - defaults
@@ -14,14 +14,14 @@ dependencies:
   - scipy
   - quadprog
   - crocoddyl
-  - keras
-  - tensorflow
-  - gym
-  - tqdm
-  - gymnasium
-  - imageio
-  - mujoco=2.3.7
-  - rich
-  - stable-baselines3
-  - tensorboard
-  - pip
+  # - keras
+  # - tensorflow
+  # - gym
+  # - tqdm
+  # - gymnasium
+  # - imageio
+  # - mujoco=2.3.7
+  # - rich
+  # - stable-baselines3
+  # - tensorboard
+  # - pip
