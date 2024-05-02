@@ -5,8 +5,20 @@ import numpy as np
 import pinocchio as pin
 from pinocchio.visualize import MeshcatVisualizer as PMV
 
+# visualize_frame method taken from https://github.com/sea-bass/pyroboplan/tree/main
+
 from . import colors
 
+FRAME_AXIS_POSITIONS = (
+    np.array([[0, 0, 0], [1, 0, 0], [0, 0, 0], [0, 1, 0], [0, 0, 0], [0, 0, 1]])
+    .astype(np.float32)
+    .T
+)
+FRAME_AXIS_COLORS = (
+    np.array([[1, 0, 0], [1, 0.6, 0], [0, 1, 0], [0.6, 1, 0], [0, 0, 1], [0, 0.6, 1]])
+    .astype(np.float32)
+    .T
+)
 
 def materialFromColor(color):
     if isinstance(color, meshcat.geometry.MeshPhongMaterial):
@@ -59,6 +71,67 @@ class MeshcatVisualizer(PMV):
     def addBox(self, name, dims, color):
         material = materialFromColor(color)
         self.viewer[name].set_object(meshcat.geometry.Box(dims), material)
+
+    def visualize_frame(self, name, tform, line_length=0.2, line_width=3):
+        """
+        Visualizes a coordinate frame as an axis triad at a specified pose.
+
+        Parameters
+        ----------
+            name : str
+                The name of the MeshCat component to add.
+            tform : `pinocchio.SE3`
+                The transform at which to display the frame.
+            line_length : float, optional
+                The length of the axes in the triad.
+            line_width : float, optional
+                The width of the axes in the triad.
+        """
+        color = FRAME_AXIS_COLORS
+
+        self.viewer[name].set_object(
+            meshcat.geometry.LineSegments(
+                meshcat.geometry.PointsGeometry(
+                    position=line_length * FRAME_AXIS_POSITIONS,
+                    color=color,
+                ),
+                meshcat.geometry.LineBasicMaterial(
+                    linewidth=line_width,
+                    vertexColors=True,
+                ),
+            )
+        )
+        self.viewer[name].set_transform(tform.homogeneous)
+
+    def visualize_axis(self, name, axis_point, axis_direction, distance_along_axis, line_width=3, color=[0, 0, 1]):
+        """
+        Visualizes a screw axis as a line in the 3D viewer.
+
+        Parameters:
+            name : str
+                The name of the MeshCat component to add.
+            axis_point : np.array
+                A point on the axis (3x1 vector).
+            axis_direction : np.array
+                The direction vector of the axis (3x1 vector).
+            length : float, optional
+                The length of the axis line to be visualized.
+            line_width : int, optional
+                The width of the axis line.
+            color : list, optional
+                The color of the axis as an RGB list.
+        """
+        start_point = axis_point
+        end_point = axis_point + distance_along_axis * axis_direction
+        points = np.vstack([start_point, end_point]).T
+        colors = np.tile(np.array(color, dtype=np.float32).reshape(3, 1), (1, 2))
+
+        self.viewer[name].set_object(
+            meshcat.geometry.LineSegments(
+                meshcat.geometry.PointsGeometry(position=points, color=colors),
+                meshcat.geometry.LineBasicMaterial(linewidth=line_width, vertexColors=True)
+            )
+        )
 
     def applyConfiguration(self, name, placement):
         if isinstance(placement, list) or isinstance(placement, tuple):
